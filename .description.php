@@ -1,24 +1,17 @@
-<?
+<?php
 if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true) die();
 
 $arComponentDescription = array(
-	"NAME" => GetMessage("T_IBLOCK_DESC_LIST"),
-	"DESCRIPTION" => GetMessage("T_IBLOCK_DESC_LIST_DESC"),
-	"ICON" => "/images/news_list.gif",
-	"SORT" => 20,
-
-	"CACHE_PATH" => "Y",
-	"PATH" => array(
-		"ID" => "content",
-		"CHILD" => array(
-			"ID" => "brands_list",
-			"NAME" => GetMessage("T_IBLOCK_DESC_NEWS"),
-			"SORT" => 10,
-			"CHILD" => array(
-				"ID" => "news_cmpx",
-			),
-		),
-	),
+    "NAME" => GetMessage("Список брендов из предложений"),
+    "DESCRIPTION" => GetMessage("Выводим список брендов"),
+    "PATH" => array(
+        "ID" => "shataloff_brands_list",
+        "CHILD" => array(
+            "ID" => "brandsList",
+            "NAME" => "Список брендов"
+        )
+    ),
+    "ICON" => "/images/icon.gif",
 );
 
 ?>

@@ -5,7 +5,9 @@ if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true) die();
 if(!CModule::IncludeModule("iblock"))
 	return;
 
-$arTypesEx = CIBlockParameters::GetIBlockTypes(array("-"=>" "));
+$arTypesEx = CIBlockParameters::GetIBlockTypes(array("-"=>" ")); //old version
+//$arTypesEx = Bitrix\Iblock\TypeTable::getList(array('select' => array('*', 'LANG_MESSAGE')))->FetchAll(); //D7
+
 
 $arIBlocks=array();
 $db_iblock = CIBlock::GetList(array("SORT"=>"ASC"), array("SITE_ID"=>$_REQUEST["site"], "TYPE" => ($arCurrentValues["IBLOCK_TYPE"]!="-"?$arCurrentValues["IBLOCK_TYPE"]:"")));

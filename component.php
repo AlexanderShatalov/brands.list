@@ -1,4 +1,4 @@
-<?
+<?php
 if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true) die();
 /** @var CBitrixComponent $this */
 /** @var array $arParams */
@@ -9,6 +9,144 @@ if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true) die();
 /** @global CDatabase $DB */
 /** @global CUser $USER */
 /** @global CMain $APPLICATION */
+
+
+$ib = new CIBlock;
+
+$getBlockList = CIBlock::GetList(
+    Array(), 
+    Array('ACTIVE'=>'Y'),
+    true
+);
+
+while($blockList = $getBlockList->Fetch())
+{
+    $iBlockList[] = $blockList['CODE'];
+}
+
+$arFields = Array(
+    "ACTIVE" => "Y",
+    "NAME" => "Список брендов",
+    "CODE" => "brandsis",
+    "LIST_PAGE_URL" => "",
+    "DETAIL_PAGE_URL" => "",
+    "IBLOCK_TYPE_ID" => "references",
+    "SITE_ID" => "s1",
+    "SORT" => 17,
+    "DESCRIPTION" => "description",
+);
+
+if (!in_array($arFields['CODE'], $iBlockList)) {
+    if ($ID > 0)
+        $res = $ib->Update($ID, $arFields);
+    else
+    {
+      $ID = $ib->Add($arFields);
+      $res = ($ID>0);
+    }
+}
+
+/*Получение ID блока по символьному коду для добавления элементов*/
+$getIdBlock = CIBlock::GetList(
+    Array(), 
+    Array(
+        'ACTIVE'=>'Y', 
+        'CODE'=> $arFields['CODE'],
+    ), true
+);
+while($idBlock = $getIdBlock->Fetch())
+{
+    $idB = $idBlock['ID'];
+} 
+
+CModule::IncludeModule("iblock");
+    /**
+     * $arr_el массив всех брендов, взятых из выгружаемых торговых предложений 1С 
+     */
+    $arSelect = Array("ID", "IBLOCK_ID", "NAME", "PROPERTY_BREND_VALUE");//IBLOCK_ID и ID обязательно должны быть указаны, см. описание arSelectFields выше
+    $arFilter = Array("IBLOCK_ID"=>12, "ACTIVE_DATE"=>"Y", "ACTIVE"=>"Y");
+    $res = CIBlockElement::GetList(Array(), $arFilter, false, Array(), $arSelect);   
+
+    while($ob = $res->GetNextElement()){ 
+        $arFields = $ob->GetFields();  
+        $arr_el[] = $arFields["NAME"];
+    }
+    /*
+     * конец формирования массива выгруженных брендов
+     */
+  
+    /**
+     * $elm - массив элементов уже имеющегося инфоблока с брендами
+     */
+    $select = array('ID', 'IBLCOCK_ID', 'NAME', 'CODE');
+    $filter = array("IBLOCK_ID"=>$idB, 'ACTIVE_DATE'=>'Y', 'ACTIVE'=>'Y');
+    $result = CIBlockElement::GetList(array(), $filter, false, array(), $select);
+    
+    while($obj = $result->GetNextElement(true, false)){
+        $el = $obj->GetFields();
+        $elm[$el['ID']] = $el['CODE'];
+    }
+    /*
+     * конец формирования массива имеющихся брендов
+     */
+    //-------------------------------------------------------------------------------//
+
+    $property_enums = CIBlockPropertyEnum::GetList(Array("VALUE"=>"ASC"), Array("IBLOCK_ID"=>12, "PROPERTY_ID" => 158, "ACTIVE_DATE"=>"Y", "ACTIVE"=> "Y"));
+    
+    while($enum_fields = $property_enums->GetNext(true, false)) {
+
+        if(in_array(trim($enum_fields['VALUE']), $arr_el)){
+            $el = new CIBlockElement;
+            $arFieldsElements = Array(
+                "MODIFIED_BY"    => $USER->GetID(), // элемент изменен текущим пользователем
+                "IBLOCK_SECTION_ID" => false,          // элемент лежит в корне раздела
+                "IBLOCK_ID"      => $idB,
+                "NAME"           => $enum_fields['VALUE'],
+                "ACTIVE"         => "Y",            // активен
+                "PREVIEW_TEXT"   => $enum_fields['VALUE'],
+                "CODE"           => $enum_fields['VALUE'],   
+                "DETAIL_TEXT"    => $enum_fields['VALUE'],
+            );
+            if (in_array($enum_fields['VALUE'], $elm)){
+               $idForUpdateEl = array_search($enum_fields['VALUE'], $elm);
+               if ($updateEl = $el->Update($idForUpdateEl, $arFieldsElements)) {
+                   //echo "Update ID: ".$updateEl;
+               }    
+               else {
+                   //echo "Error: ".$el->LAST_ERROR;
+               }                                         
+            }else{
+                if($PRODUCT_ID = $el->Add($arFieldsElements)){
+                    //echo "New ID: ".$PRODUCT_ID;
+                }  
+                else {
+                    //echo "Error: ".$el->LAST_ERROR;
+                }
+                  
+            }
+        }
+
+    }
+    
+    /**
+     * удаление элементов(брендов), отстутсвующих в файле выгрузки
+     */
+    foreach ($elm as $key => $value) {
+        if (!in_array($value, $arr_el)){
+
+            if(CIBlock::GetPermission($IBLOCK_ID)>='W'){
+                $DB->StartTransaction();
+                if(!CIBlockElement::Delete($key)){
+                    $strWarning .= 'Error!';
+                    $DB->Rollback();
+                }
+                else{
+                    $DB->Commit();
+                    //echo "Delete ID: ".$idForDeleteEl;
+                }
+            }
+        }
+    }
 
 /** @global CIntranetToolbar $INTRANET_TOOLBAR */
 global $INTRANET_TOOLBAR;
@@ -25,7 +163,7 @@ if(!isset($arParams["CACHE_TIME"]))
 
 $arParams["IBLOCK_TYPE"] = trim($arParams["IBLOCK_TYPE"]);
 if(strlen($arParams["IBLOCK_TYPE"])<=0)
-	$arParams["IBLOCK_TYPE"] = "news";
+	$arParams["IBLOCK_TYPE"] = "references";
 $arParams["IBLOCK_ID"] = trim($arParams["IBLOCK_ID"]);
 $arParams["PARENT_SECTION"] = intval($arParams["PARENT_SECTION"]);
 $arParams["INCLUDE_SUBSECTIONS"] = $arParams["INCLUDE_SUBSECTIONS"]!="N";
