@@ -13,30 +13,50 @@
 $this->setFrameMode(true);
 ?>
 <div class="news-list">
+    
 <?if($arParams["DISPLAY_TOP_PAGER"]):?>
-	<?=$arResult["NAV_STRING"]?><br />
+    <?=$arResult["NAV_STRING"]?><br>
 <?endif;?>
-<div id="table_brands">
-<?foreach($arResult["ITEMS"] as $k => $arItem):?>
-    <?  
-            $firstUpLetter = ucfirst(mb_substr($arItem['NAME'], 0, 1));
-            $arBrands[$firstUpLetter][] = array($arItem['NAME'], $arItem["DETAIL_PAGE_URL"]);
-            //$arBrands[$firstUpLetter][][$i] = $arItem["DETAIL_PAGE_URL"];
-            
-        //бренды по буквам в массиве $arBrands
-    ?>
-<?endforeach;?>    
-        <?
-        echo '<pre>';
-        //var_dump($arBrands[0][$firstUpLetter]);
-        //var_dump($d);
-        print_r($arBrands);
-            //var_dump(ucfirst(mb_substr($arItem['NAME'], 0, 1)));
-        echo '</pre>';
-        ?>
         
-</div>
+<div id="table_brands">
+    <?foreach($arResult["ITEMS"] as $k => $arItem):?>
+        <?  //формирование нового масиива
+            $firstUpLetter = ucfirst(mb_substr($arItem['NAME'], 0, 1));
+            $arBrands[$firstUpLetter][] = array(
+                $arItem['NAME'], 
+                $arItem['DETAIL_PAGE_URL'],
+                $arItem['PREVIEW_PICTURE']['SRC'],
+                $arItem['PREVIEW_PICTURE']['WIDTH'],
+                $arItem['PREVIEW_PICTURE']['HEIGHT'],
+                $arItem['PREVIEW_PICTURE']['ALT'],
+                $arItem['PREVIEW_PICTURE']['TITLE']
+            );
+            
+        ?>
+    <?endforeach;?>    
+        <div class="row">
+            <? //вывод элементов на страницу?>
+            <?foreach ($arBrands as $letter => $newBrands):?>
+            <ul class="brands-item">
+                <li><b><?=$letter?></b>
+                    <ul>
+                        <?foreach ($newBrands as $brand):?>
+                            <a href="<?=$brand[1]?>"><?=$brand[0] . '<br>'?></a>  
+                        <?endforeach;?>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+            <?endforeach;?>
+            
+        <?    
+            //echo '<pre>';
+            //var_dump(intval(count($arBrands)/3));
+            //echo '</pre>';
+        ?>
+        </div>
+    </div>
 <?if($arParams["DISPLAY_BOTTOM_PAGER"]):?>
-	<br /><?=$arResult["NAV_STRING"]?>
+    <br><?=$arResult["NAV_STRING"]?>
 <?endif;?>
 </div>
