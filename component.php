@@ -72,9 +72,13 @@ CModule::IncludeModule("iblock");
         $arr_el[] = $arFields["NAME"];
     }
     /*
+    echo '<pre>';
+    print_r($arr_el);
+    echo '</pre>';
+     */
+    /*
      * конец формирования массива выгруженных брендов
      */
-  
     /**
      * $elm - массив элементов уже имеющегося инфоблока с брендами
      */
