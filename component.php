@@ -36,14 +36,14 @@ $arFields = Array(
     "DESCRIPTION" => "description",
 );
 
+//добавление или обновление инфоблока
 if (!in_array($arFields['CODE'], $iBlockList)) {
-    if ($ID > 0)
-        $res = $ib->Update($ID, $arFields);
-    else
-    {
-      $ID = $ib->Add($arFields);
-      $res = ($ID>0);
-    }
+        $idB = $ib->Add($arFields);
+        echo 'ADD';
+}
+else if (in_array($arFields['CODE'], $iBlockList)){
+	$res = $ib->Update($idB, $arFields);
+        echo 'Update';
 }
 
 /*Получение ID блока по символьному коду для добавления элементов*/
